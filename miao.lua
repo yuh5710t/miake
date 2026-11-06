@@ -225,7 +225,7 @@ endlocal function powerfulFling(targetPlayer)
         task.wait()
     until (root.Position - getgenv().OldPos.p).Magnitude < 25
     Workspace.FallenPartsDestroyHeight = getgenv().FPDH
-    endlocal function enableCoinV2()
+  endlocal function enableCoinV2()
     coinTaffyV2 = true
     coinTaffyV2Loop = task.spawn(function()
         while task.wait(0.01) and coinTaffyV2 do
@@ -301,7 +301,7 @@ end
 local function disableCoinV1()
     autoCollectGoldEnabled = false
     if autoCollectGoldLoop then task.cancel(autoCollectGoldLoop) end
-        endlocal function ClearHighlights()
+    endlocal function ClearHighlights()
     for _, v in ipairs(Workspace:GetDescendants()) do
         if v:IsA("Highlight") and v.Name == "JobHighlight" then v:Destroy() end
     end
@@ -438,7 +438,7 @@ end
 local function disableAutoPickGun()
     autoPickGunEnabled = false
     if autoPickGunLoop then task.cancel(autoPickGunLoop) end
-            endlocal function KillerAutoKillAll()
+      endlocal function KillerAutoKillAll()
     if GetJob(LocalPlayer) ~= "杀手" then Notify("仅杀手可使用此功能") return end
     if autoKillLoop then
         task.cancel(autoKillLoop)
@@ -667,7 +667,7 @@ local function teleportToGunDrop()
             if conn then conn:Disconnect() LocalPlayer.Character.HumanoidRootPart.CFrame = prev end
         end)
     end
-                endlocal function loadFlightScript()
+        endlocal function loadFlightScript()
     local ok, err = pcall(function()
         local main = Instance.new("ScreenGui")
         main.Name = "main"; main.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -758,7 +758,7 @@ local function teleportToGunDrop()
         end)
     end)
     if ok then Notify("飞行脚本已加载") else Notify("飞行脚本加载失败: "..tostring(err)) end
-                    endlocal function TP(p)
+          endlocal function TP(p)
     local r = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     local tr = p.Character:FindFirstChild("HumanoidRootPart")
     if r and tr then r.CFrame = tr.CFrame*CFrame.new(0,0,2) Notify("已传送到 "..p.Name) end
@@ -861,7 +861,7 @@ local function StopTracking()
     Camera.CameraSubject = LocalPlayer.Character
     Camera.CameraType = Enum.CameraType.Custom
     Notify("自瞄已停止")
-                        endWindow = Library:CreateWindow({
+            endWindow = Library:CreateWindow({
     Title = "灵境",
     Footer = "创作者：李佳 | QQ群：2066484928",
     Icon = 131153193945220,
@@ -1093,4 +1093,4 @@ if SaveManager then
     SaveManager:IgnoreThemeSettings()
     SaveManager:SetFolder("灵境")
     SaveManager:BuildConfigSection(Tabs.Settings)
-                            end
+              end
