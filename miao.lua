@@ -1,427 +1,1096 @@
--- =====================================================================
--- 破坏者谜团 2 (李佳专属) [第一段]：沉浸式索尼克开场 + 状态机 UI
--- 版本：V8.0 (企业级模块化规范)
--- 注释：本段负责播放开场动画、构建用户界面、初始化全局配置。
--- =====================================================================
+-- 灵境
+-- 创作者：李佳 | QQ群：2066484928
 
--- ==========================================
--- 模块 0：核心服务与依赖引入
--- ==========================================
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
-local LocalPlayer = Players.LocalPlayer
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "灵境",
+    Text = "创作者：李佳 | QQ群：2066484928",
+    Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150"
+})
 
--- ==========================================
--- 模块 1：索尼克经典开场动画引擎
--- ==========================================
-local function PlaySonicIntro()
-    -- 创建独立的动画 GUI 层，防止干扰后续 UI
-    local LoadGui = Instance.new("ScreenGui")
-    LoadGui.Name = "SonicIntroUI"
-    LoadGui.DisplayOrder = 99999
-    LoadGui.IgnoreGuiInset = true
-    LoadGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-    -- 经典深蓝背景
-    local Bg = Instance.new("Frame", LoadGui)
-    Bg.Size = UDim2.new(1, 0, 1, 0)
-    Bg.BackgroundColor3 = Color3.fromRGB(10, 20, 50) -- 索尼克深蓝
-    Bg.BorderSizePixel = 0
-
-    -- 核心元素：金色大圆环 (Rings)
-    local GoldRing = Instance.new("Frame", Bg)
-    GoldRing.Size = UDim2.new(0, 220, 0, 220)
-    GoldRing.Position = UDim2.new(0.5, -110, 0.5, -110)
-    GoldRing.BackgroundTransparency = 1
-    
-    local RingStroke = Instance.new("UIStroke", GoldRing)
-    RingStroke.Color = Color3.fromRGB(255, 215, 0) -- 经典暗金
-    RingStroke.Thickness = 18 -- 加粗，呈现真实的厚重感
-    
-    local RingCorner = Instance.new("UICorner", GoldRing)
-    RingCorner.CornerRadius = UDim.new(1, 0) -- 完美正圆
-
-    -- 核心元素：速度蓝光
-    local SpeedGlow = Instance.new("Frame", Bg)
-    SpeedGlow.Size = UDim2.new(0, 250, 0, 250)
-    SpeedGlow.Position = UDim2.new(0.5, -125, 0.5, -125)
-    SpeedGlow.BackgroundTransparency = 1
-    
-    local GlowStroke = Instance.new("UIStroke", SpeedGlow)
-    GlowStroke.Color = Color3.fromRGB(0, 150, 255) -- 索尼克蓝
-    GlowStroke.Thickness = 4
-    GlowStroke.Transparency = 0.3
-
-    -- 文字元素：SONIC
-    local Title = Instance.new("TextLabel", Bg)
-    Title.Size = UDim2.new(1, 0, 0, 60)
-    Title.Position = UDim2.new(0, 0, 0.5, 120)
-    Title.BackgroundTransparency = 1
-    Title.Text = "SONIC"
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.Font = Enum.Font.GothamBlack
-    Title.TextSize = 50
-    Title.TextStrokeTransparency = 0
-    Title.TextStrokeColor3 = Color3.fromRGB(255, 215, 0)
-    Title.TextTransparency = 1 -- 初始透明
-
-    -- 文字元素：GOTTA GO FAST
-    local Sub = Instance.new("TextLabel", Bg)
-    Sub.Size = UDim2.new(1, 0, 0, 30)
-    Sub.Position = UDim2.new(0, 0, 0.5, 180)
-    Sub.BackgroundTransparency = 1
-    Sub.Text = "GOTTA GO FAST!"
-    Sub.TextColor3 = Color3.fromRGB(255, 215, 0)
-    Sub.Font = Enum.Font.GothamBold
-    Sub.TextSize = 22
-    Sub.TextTransparency = 1
-
-    -- 动画执行线程
-    task.spawn(function()
-        -- 环形高速旋转（模拟音速）
-        local spinConn = RunService.RenderStepped:Connect(function()
-            GoldRing.Rotation = GoldRing.Rotation + 15
-            SpeedGlow.Rotation = SpeedGlow.Rotation - 8
-        end)
-        
-        -- 入场：金环瞬间弹射放大
-        GoldRing.Size = UDim2.new(0, 0, 0, 0)
-        GoldRing.Position = UDim2.new(0.5, 0, 0.5, 0)
-        
-        local popInfo = TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-        TweenService:Create(GoldRing, popInfo, {Size = UDim2.new(0, 220, 0, 220), Position = UDim2.new(0.5, -110, 0.5, -110)}):Play()
-        TweenService:Create(SpeedGlow, popInfo, {Size = UDim2.new(0, 250, 0, 250), Position = UDim2.new(0.5, -125, 0.5, -125)}):Play()
-        
-        -- 文字渐显
-        TweenService:Create(Title, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-        TweenService:Create(Sub, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-        
-        task.wait(2.5) -- 给玩家留出观看时间
-        
-        -- 退场：瞬间前冲消散
-        local outInfo = TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.In)
-        TweenService:Create(Bg, outInfo, {BackgroundTransparency = 1}):Play()
-        TweenService:Create(GoldRing, outInfo, {Size = UDim2.new(0, 500, 0, 500), Position = UDim2.new(0.5, -250, 0.5, -250)}):Play()
-        TweenService:Create(RingStroke, outInfo, {Transparency = 1}):Play()
-        TweenService:Create(GlowStroke, outInfo, {Transparency = 1}):Play()
-        TweenService:Create(Title, outInfo, {TextTransparency = 1}):Play()
-        TweenService:Create(Sub, outInfo, {TextTransparency = 1}):Play()
-        
-        task.wait(0.6)
-        spinConn:Disconnect()
-        LoadGui:Destroy()
+local function safeLoad(url)
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url))()
     end)
+    if not success then
+        warn("加载失败: " .. url)
+        return nil
+    end
+    return result
 end
 
--- 执行动画
-PlaySonicIntro()
+local Library = safeLoad("https://raw.githubusercontent.com/kongbaNB/ui/refs/heads/main/黑曜石主库.ui")
+local ThemeManager = safeLoad("https://raw.githubusercontent.com/kongbaNB/ui/refs/heads/main/主题管理.ui")
+local SaveManager = safeLoad("https://raw.githubusercontent.com/kongbaNB/ui/refs/heads/main/配置管理.ui")
 
--- ==========================================
--- 模块 2：全局状态机与菜单初始化
--- ==========================================
--- 延时等待动画播完，再创建菜单界面
-task.wait(3.2)
-
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-
--- 将 Window 挂载到 _G 上，以便第二段可以安全地接管
-_G.MM2Window = WindUI:CreateWindow({
-    Title = "破坏者谜团 2",
-    Author = "李佳",
-    Folder = "MM2_V8",
-    Size = UDim2.fromOffset(500, 400),
-    Theme = "Dark"
-})
-
--- 初始化核心全局状态机（State Machine）
--- 采用键值对形式，后续只需修改这些布尔值即可控制功能
-_G.MM2State = {
-    EnableESP = true,       -- 透视开关
-    EnableHitbox = true,    -- 骨骼放大（防打不中）
-    EnableKnifeSize = true, -- 长臂猿（加大刀距）
-    EnableAimbot = true,    -- 静默自瞄
-    EnableNoclip = false,   -- 幽灵穿墙
-    EnableNoFlash = true,   -- 防黑屏
-    
-    KnifeSizeValue = 35,    -- 刀距数值
-    HitboxValue = 16,       -- 骨骼放大数值
-    TargetMurderer = nil    -- 用于自瞄锁定的目标（由第二段动态更新）
-}
-
--- 引用状态机与窗口
-local State = _G.MM2State
-local Win = _G.MM2Window
-
--- ==========================================
--- 模块 3：UI 控件模块化挂载
--- ==========================================
-
--- 标签页 1：视觉系统
-local VisualTab = Win:Tab({ Title = "视觉系统", Icon = "eye" })
-VisualTab:Toggle({
-    Title = "全图身份透视",
-    Desc = "显示红名杀手 / 蓝名警长 / 绿名平民",
-    Value = true,
-    Callback = function(state) State.EnableESP = state end
-})
-VisualTab:Toggle({
-    Title = "防黑屏夜视仪",
-    Desc = "无视杀手关灯（Lights Out）",
-    Value = true,
-    Callback = function(state) State.EnableNoFlash = state end
-})
-
--- 标签页 2：杀手强化
-local KillerTab = Win:Tab({ Title = "杀手强化", Icon = "knife" })
-KillerTab:Toggle({
-    Title = "长臂猿（超距判定）",
-    Desc = "增大武器的物理碰撞体积",
-    Value = true,
-    Callback = function(state) State.EnableKnifeSize = state end
-})
-KillerTab:Toggle({
-    Title = "敌人骨骼放大",
-    Desc = "让敌人的受击判定框变大，闭眼都能砍中",
-    Value = true,
-    Callback = function(state) State.EnableHitbox = state end
-})
-KillerTab:Slider({
-    Title = "自定刀距大小",
-    Desc = "数值越大，隔空砍人越远",
-    Value = { Min = 10, Max = 70, Default = 35 },
-    Callback = function(val) State.KnifeSizeValue = val end
-})
-
--- 标签页 3：警长强化
-local SheriffTab = Win:Tab({ Title = "警长强化", Icon = "crosshair" })
-SheriffTab:Toggle({
-    Title = "静默自瞄锁头",
-    Desc = "子弹自动追踪杀手头部（无需瞄准）",
-    Value = true,
-    Callback = function(state) State.EnableAimbot = state end
-})
-
--- 标签页 4：系统功能
-local SysTab = Win:Tab({ Title = "系统功能", Icon = "settings" })
-SysTab:Toggle({
-    Title = "幽灵穿墙",
-    Desc = "无视一切物理障碍物",
-    Value = false,
-    Callback = function(state) State.EnableNoclip = state end
-})
-
--- 提示第一段加载成功
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "索尼克加载完毕",
-    Text = "请立即运行第二段核心逻辑脚本...",
-    Duration = 5
-})-- =====================================================================
--- 破坏者谜团 2 (李佳专属) [第二段]：卓越级物理与自瞄引擎
--- 版本：V8.0 (企业级模块化规范)
--- 注释：负责实时物理运算、UI渲染循环、底层射线劫持。
--- =====================================================================
-
--- ==========================================
--- 模块 0：服务引入与安全检查
--- ==========================================
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
-local LocalPlayer = Players.LocalPlayer
-local CurrentCamera = workspace.CurrentCamera
-
--- 从第一段提取状态机
-local State = _G.MM2State
-if not State then
-    -- 安全拦截：如果玩家没跑第一段，直接中断并警告
+if not Library then
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "致命错误", Text = "检测到未运行第一段代码！", Duration = 5
+        Title = "错误",
+        Text = "UI 库加载失败，请检查网络或脚本资源",
+        Duration = 5,
     })
     return
 end
 
-local ESPCache = {}
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Camera = Workspace.CurrentCamera
+local TweenService = game:GetService("TweenService")
+local TextChatService = game:GetService("TextChatService")
 
--- ==========================================
--- 模块 1：工具库（独立封装）
--- ==========================================
--- 检查角色是否存活
-local function IsAlive(character)
-    if not character or not character.Parent then return false end
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    return humanoid and humanoid.Health > 0
+local Notify = function() end
+local Window
+
+local jobEspEnabled, jobEspLoop = false, nil
+local autoKillLoop = nil
+local autoPickGunEnabled, autoPickGunLoop = false, nil
+local autoCollectGoldEnabled, autoCollectGoldLoop = false, nil
+local coinTaffyV2, coinTaffyV2Loop = false, nil
+local trackLoop, crosshairUI, currentFollowLoop = nil, nil, nil
+local ignoreKnife = false
+local killAuraLoop, TaffyAu = nil, false
+local rangeEnabled, rangeBox, rangeSize = false, false, 1
+local gunESP, trapESP, antifail = false, false, false
+
+local trapHighlight = Instance.new("Highlight")
+trapHighlight.Name = "TrapESP"
+trapHighlight.FillColor = Color3.fromRGB(255, 112, 10)
+trapHighlight.OutlineColor = Color3.fromRGB(255, 112, 10)
+trapHighlight.FillTransparency = 0.5
+
+local gunHighlight = Instance.new("Highlight")
+gunHighlight.Name = "GunESP"
+gunHighlight.FillColor = Color3.fromRGB(255, 255, 0)
+gunHighlight.OutlineTransparency = 1
+gunHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnToplocal function findMurderer()
+    for _, i in ipairs(Players:GetPlayers()) do
+        if i.Backpack:FindFirstChild("Knife") then return i end
+    end
+    for _, i in ipairs(Players:GetPlayers()) do
+        if i.Character and i.Character:FindFirstChild("Knife") then return i end
+    end
+    return nil
 end
 
--- 计算 3D 空间距离
-local function GetDistance(pos1, pos2)
-    return math.floor((pos1 - pos2).Magnitude)
+local function findSheriff()
+    for _, i in ipairs(Players:GetPlayers()) do
+        if i.Backpack:FindFirstChild("Gun") then return i end
+    end
+    for _, i in ipairs(Players:GetPlayers()) do
+        if i.Character and i.Character:FindFirstChild("Gun") then return i end
+    end
+    return nil
 end
 
--- ==========================================
--- 模块 2：物理改造引擎（穿墙 + 长臂猿）
--- ==========================================
-local function ProcessPhysics(myChar)
-    -- 2.1 长臂猿大刀距
-    local knife = myChar:FindFirstChild("Knife")
-    if knife and State.EnableKnifeSize then
-        for _, part in pairs(knife:GetDescendants()) do
-            if part:IsA("BasePart") then
-                -- 放大物理判定体积
-                part.Size = Vector3.new(State.KnifeSizeValue, State.KnifeSizeValue, State.KnifeSizeValue)
-                part.CanCollide = true
-                part.Transparency = 1 -- 隐形放大的模型，防止挡视线
-                part.Massless = true   -- 去除质量，防止拖慢移速
+local function findNearestPlayer()
+    local nearest, minDist = nil, math.huge
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local otherRoot = p.Character:FindFirstChild("HumanoidRootPart")
+            if otherRoot then
+                local d = (myRoot.Position - otherRoot.Position).Magnitude
+                if d < minDist then minDist = d; nearest = p end
             end
         end
     end
-
-    -- 2.2 幽灵穿墙
-    if State.EnableNoclip then
-        for _, part in pairs(myChar:GetDescendants()) do
-            if part:IsA("BasePart") and part.CanCollide then
-                part.CanCollide = false
-            end
-        end
-    else
-        -- 恢复碰撞（小心不要卡在地图里）
-        for _, part in pairs(myChar:GetDescendants()) do
-            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                part.CanCollide = true
-            end
-        end
-    end
+    return nearest
 end
 
--- ==========================================
--- 模块 3：视觉与判定引擎（透视 + 骨骼放大）
--- ==========================================
-local function ProcessVisuals()
-    State.TargetMurderer = nil -- 每帧重置自瞄锁定目标
-    
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and IsAlive(plr.Character) then
-            local tChar = plr.Character
-            local head = tChar:FindFirstChild("Head")
-            local root = tChar:FindFirstChild("HumanoidRootPart")
-            
-            if head and root then
-                -- 3.1 敌人受击框放大（骨骼放大）
-                if State.EnableHitbox then
-                    local isR6 = tChar:FindFirstChild("Torso") ~= nil
-                    for _, p in pairs(tChar:GetDescendants()) do
-                        if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" and not p.Parent:IsA("Tool") then
-                            if (isR6 and (p.Name == "Head" or p.Name == "Torso" or string.find(p.Name, "Arm"))) or 
-                               (not isR6 and (string.find(p.Name, "Head") or string.find(p.Name, "Torso") or string.find(p.Name, "Arm"))) then
-                                p.Size = Vector3.new(State.HitboxValue, State.HitboxValue, State.HitboxValue)
-                            end
+local function getMap()
+    for _, o in ipairs(Workspace:GetChildren()) do
+        if o:FindFirstChild("CoinContainer") and o:FindFirstChild("Spawns") then return o end
+    end
+    return nil
+end
+
+local function GetJob(p)
+    local k, s = false, false
+    local function c(it)
+        if it:IsA("Tool") then
+            local n = it.Name:lower()
+            if n:find("knife") or n:find("刀") then k = true end
+            if n:find("gun") or n:find("手枪") or n:find("警长") or n:find("revolver") then s = true end
+        end
+    end
+    if p.Backpack then for _, v in pairs(p.Backpack:GetChildren()) do c(v) end end
+    if p.Character then for _, v in pairs(p.Character:GetChildren()) do c(v) end end
+    return k and "杀手" or s and "警长" or "平民"
+end
+
+local function GetWeapon(p, wtype)
+    local char, bp = p.Character, p.Backpack
+    if not char and not bp then return nil end
+    local targets = wtype == "knife" and {"knife", "刀"} or {"gun", "手枪", "警长", "revolver"}
+    local function check(item)
+        if not item or not item:IsA("Tool") then return false end
+        local n = item.Name:lower()
+        for _, kw in ipairs(targets) do if n:find(kw) then return true end end
+        return false
+    end
+    if char then for _, item in ipairs(char:GetChildren()) do if check(item) then return item end end end
+    if bp then for _, item in ipairs(bp:GetChildren()) do if check(item) then return item end end end
+    return nil
+end
+
+local function getClosestModel(models)
+    local closest, minDist = nil, math.huge
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+    for _, model in ipairs(models) do
+        local pos = model:GetPivot().Position
+        local dist = (myRoot.Position - pos).Magnitude
+        if dist < minDist then minDist = dist; closest = model end
+    end
+    return closest
+endlocal function powerfulFling(targetPlayer)
+    if not targetPlayer or not targetPlayer.Character then Notify("目标玩家无效") return end
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local root = hum and hum.RootPart
+    local tChar = targetPlayer.Character
+    local tHum = tChar:FindFirstChildOfClass("Humanoid")
+    local tRoot = tHum and tHum.RootPart
+    local tHead = tChar:FindFirstChild("Head")
+    local acc = tChar:FindFirstChildOfClass("Accessory")
+    local handle = acc and acc:FindFirstChild("Handle")
+    if not char or not hum or not root then Notify("你的角色无效") return end
+    if root.Velocity.Magnitude < 50 then getgenv().OldPos = root.CFrame end
+    if not getgenv().FPDH then getgenv().FPDH = Workspace.FallenPartsDestroyHeight end
+    if tHead then
+        Workspace.CurrentCamera.CameraSubject = tHead
+    elseif not tHead and handle then
+        Workspace.CurrentCamera.CameraSubject = handle
+    elseif tHum and tRoot then
+        Workspace.CurrentCamera.CameraSubject = tHum
+    end
+    if not tChar:FindFirstChildWhichIsA("BasePart") then Notify("目标没有有效部位") return end
+    local FPos = function(bp, pos, ang)
+        root.CFrame = CFrame.new(bp.Position) * pos * ang
+        char:SetPrimaryPartCFrame(CFrame.new(bp.Position) * pos * ang)
+        root.Velocity = Vector3.new(9e7, 9e8, 9e7)
+        root.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+    end
+    local SFBasePart = function(bp)
+        local timeout = tick() + 2
+        local angle = 0
+        repeat
+            if root and tHum then
+                if bp.Velocity.Magnitude < 50 then
+                    angle = angle + 100
+                    FPos(bp, CFrame.new(0,1.5,0) + tHum.MoveDirection * bp.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(angle),0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,-1.5,0) + tHum.MoveDirection * bp.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(angle),0,0)) task.wait()
+                    FPos(bp, CFrame.new(2.25,1.5,-2.25) + tHum.MoveDirection * bp.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(angle),0,0)) task.wait()
+                    FPos(bp, CFrame.new(-2.25,-1.5,2.25) + tHum.MoveDirection * bp.Velocity.Magnitude/1.25, CFrame.Angles(math.rad(angle),0,0)) task.wait()
+                else
+                    FPos(bp, CFrame.new(0,1.5,tHum.WalkSpeed), CFrame.Angles(math.rad(90),0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,-1.5,-tHum.WalkSpeed), CFrame.Angles(0,0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,1.5,tRoot.Velocity.Magnitude/1.25), CFrame.Angles(math.rad(90),0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,-1.5,-tRoot.Velocity.Magnitude/1.25), CFrame.Angles(0,0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,1.5,tRoot.Velocity.Magnitude/1.25), CFrame.Angles(math.rad(90),0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,-1.5,0), CFrame.Angles(math.rad(90),0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,-1.5,0), CFrame.Angles(0,0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,-1.5,0), CFrame.Angles(math.rad(-90),0,0)) task.wait()
+                    FPos(bp, CFrame.new(0,-1.5,0), CFrame.Angles(0,0,0)) task.wait()
+                end
+            else break end
+        until bp.Velocity.Magnitude > 500 or bp.Parent ~= targetPlayer.Character or targetPlayer.Parent ~= Players or targetPlayer.Character ~= tChar or (tHum and tHum.Sit) or hum.Health <= 0 or tick() > timeout
+    end
+    Workspace.FallenPartsDestroyHeight = -50000
+    local bv = Instance.new("BodyVelocity")
+    bv.Name = "EpixVel"
+    bv.Parent = root
+    bv.Velocity = Vector3.new(9e7, 9e8, 9e7)
+    bv.MaxForce = Vector3.new(1e7, 1e7, 1e7)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+    if tRoot and tHead then
+        if (tRoot.CFrame.p - tHead.CFrame.p).Magnitude > 5 then SFBasePart(tHead) else SFBasePart(tRoot) end
+    elseif tRoot and not tHead then SFBasePart(tRoot)
+    elseif not tRoot and tHead then SFBasePart(tHead)
+    elseif not tRoot and not tHead and acc and handle then SFBasePart(handle)
+    else Notify("找不到合适的甩飞部位") bv:Destroy() return end
+    bv:Destroy()
+    hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+    Workspace.CurrentCamera.CameraSubject = hum
+    repeat
+        root.CFrame = getgenv().OldPos * CFrame.new(0,0.5,0)
+        char:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0,0.5,0))
+        hum:ChangeState("GettingUp")
+        for _, x in pairs(char:GetChildren()) do
+            if x:IsA("BasePart") then x.Velocity, x.RotVelocity = Vector3.new(), Vector3.new() end
+        end
+        task.wait()
+    until (root.Position - getgenv().OldPos.p).Magnitude < 25
+    Workspace.FallenPartsDestroyHeight = getgenv().FPDH
+    endlocal function enableCoinV2()
+    coinTaffyV2 = true
+    coinTaffyV2Loop = task.spawn(function()
+        while task.wait(0.01) and coinTaffyV2 do
+            local map = getMap()
+            if map and map:FindFirstChild("CoinContainer") then
+                local coins = map.CoinContainer:GetChildren()
+                if #coins > 1 then
+                    local closest = getClosestModel(coins)
+                    if closest and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local dist = (LocalPlayer.Character.HumanoidRootPart.Position - closest:GetPivot().Position).Magnitude
+                        local tween = TweenService:Create(LocalPlayer.Character.HumanoidRootPart, TweenInfo.new(dist*0.05), {CFrame = closest:GetPivot()})
+                        tween:Play()
+                        tween.Completed:Wait()
+                        task.wait(0.01)
+                        closest:Destroy()
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function disableCoinV2()
+    coinTaffyV2 = false
+    if coinTaffyV2Loop then task.cancel(coinTaffyV2Loop) end
+end
+
+local function enableCoinV1()
+    if autoCollectGoldLoop then task.cancel(autoCollectGoldLoop) end
+    autoCollectGoldLoop = task.spawn(function()
+        while autoCollectGoldEnabled do
+            task.wait(0.3)
+            pcall(function()
+                local myChar = LocalPlayer.Character
+                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                local myHum = myChar and myChar:FindFirstChild("Humanoid")
+                if not myChar or not myRoot or not myHum or myHum.Health <= 0 then return end
+                local golds = {}
+                for _, desc in ipairs(Workspace:GetDescendants()) do
+                    local nl = desc.Name:lower()
+                    local isGold = false
+                    for _, kw in ipairs({"coin", "金币", "gold", "money", "cash", "钱"}) do
+                        if nl:find(kw) then isGold = true break end
+                    end
+                    if isGold and (desc:IsA("Tool") or desc:IsA("BasePart") or desc:IsA("Model")) then
+                        table.insert(golds, desc)
+                    end
+                end
+                for _, gold in ipairs(golds) do
+                    if not autoCollectGoldEnabled then break end
+                    if not myChar or not myChar.Parent or not myRoot or not myRoot.Parent then break end
+                    if gold:IsA("Tool") then
+                        if gold.Parent ~= LocalPlayer.Backpack and gold.Parent ~= myChar then
+                            gold.Parent = LocalPlayer.Backpack
+                            task.wait(0.3)
+                        end
+                    elseif gold:IsA("BasePart") or gold:IsA("Model") then
+                        local pos = gold:IsA("Model") and gold:FindFirstChild("HumanoidRootPart") and gold.HumanoidRootPart.Position or (gold:IsA("BasePart") and gold.Position or nil)
+                        if pos then
+                            local orig = myRoot.CFrame
+                            myRoot.CFrame = CFrame.new(pos + Vector3.new(0, 2, 0))
+                            task.wait(0.05)
+                            myRoot.CFrame = orig
+                            task.wait(0.3)
                         end
                     end
                 end
-                
-                -- 3.2 身份判定与自瞄锁定
-                local role, color = "平民", Color3.fromRGB(0, 255, 0)
-                if tChar:FindFirstChild("Knife") then 
-                    role, color = "杀手", Color3.fromRGB(255, 50, 50)
-                    State.TargetMurderer = head -- 捕获杀手头部，供底层 Hook 使用
-                elseif tChar:FindFirstChild("Gun") or tChar:FindFirstChild("Revolver") then 
-                    role, color = "警长", Color3.fromRGB(50, 150, 255) 
-                end
-                
-                -- 3.3 全图身份透视渲染（ESP）
-                if State.EnableESP then
-                    if not ESPCache[plr] then
-                        -- 初始化 UI 对象
-                        local hl = Instance.new("Highlight", tChar)
-                        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                        local bb = Instance.new("BillboardGui", head)
-                        bb.Size, bb.StudsOffset, bb.AlwaysOnTop = UDim2.new(0, 160, 0, 50), Vector3.new(0, 2.5, 0), true
-                        
-                        local nameTxt = Instance.new("TextLabel", bb)
-                        nameTxt.Size, nameTxt.BackgroundTransparency, nameTxt.Font, nameTxt.TextSize = UDim2.new(1, 0, 0.5, 0), 1, Enum.Font.GothamBold, 16
-                        
-                        local roleTxt = Instance.new("TextLabel", bb)
-                        roleTxt.Size, roleTxt.Position, roleTxt.BackgroundTransparency, roleTxt.Font, roleTxt.TextSize = UDim2.new(1, 0, 0.5, 0), UDim2.new(0, 0, 0.5, 0), 1, Enum.Font.GothamBold, 14
-                        
-                        ESPCache[plr] = {HL = hl, Name = nameTxt, Role = roleTxt}
-                    end
-                    
-                    -- 实时更新数据
-                    local esp = ESPCache[plr]
-                    local dist = GetDistance(root.Position, CurrentCamera.CFrame.Position)
-                    
-                    esp.HL.FillColor = color
-                    esp.Name.Text = plr.Name .. " [" .. dist .. "m]"
-                    esp.Name.TextColor3 = Color3.fromRGB(255, 255, 255)
-                    esp.Role.Text, esp.Role.TextColor3 = role, color
-                end
-            end
+            end)
         end
-    end
-end
-
--- ==========================================
--- 模块 4：底层劫持引擎（静默自瞄）
--- ==========================================
--- 原理：通过 Hook 游戏底层的 getrawmetatable，劫持 Raycast（射线检测）
--- 当开枪瞬间，强行修改射线终点为杀手头部，实现子弹拐弯。
-local mt = getrawmetatable(game)
-if mt and mt.__namecall then
-    local oldNamecall = mt.__namecall
-    setreadonly(mt, false)
-    
-    mt.__namecall = newcclosure(function(self, ...)
-        local method = getnamecallmethod()
-        local args = {...}
-        
-        -- 检测是否为射线操作
-        if tostring(method) == "Raycast" or tostring(self) == "Ray" then
-            -- 如果开启自瞄且发现了杀手目标
-            if State.EnableAimbot and State.TargetMurderer and State.TargetMurderer.Parent then
-                local origin = CurrentCamera.CFrame.Position
-                -- 重定向向量：直接指向杀手头部
-                local direction = (State.TargetMurderer.Position - origin).Unit * 1000
-                
-                -- 覆盖游戏的原始参数
-                if type(args[2]) == "Vector3" then
-                    args[2] = direction 
-                end
-            end
-        end
-        
-        -- 执行被拦截后的原始操作
-        return oldNamecall(self, unpack(args))
     end)
-    
-    setreadonly(mt, true)
 end
 
--- ==========================================
--- 模块 5：环境光干预（防黑屏）
--- ==========================================
-local function ProcessLighting()
-    if State.EnableNoFlash then
-        -- 强制拉高环境光亮度，无视杀手拉闸
-        Lighting.Ambient = Color3.fromRGB(150, 150, 150)
-        Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
-        Lighting.Brightness = 2
+local function disableCoinV1()
+    autoCollectGoldEnabled = false
+    if autoCollectGoldLoop then task.cancel(autoCollectGoldLoop) end
+        endlocal function ClearHighlights()
+    for _, v in ipairs(Workspace:GetDescendants()) do
+        if v:IsA("Highlight") and v.Name == "JobHighlight" then v:Destroy() end
     end
 end
 
--- ==========================================
--- 模块 6：主控渲染大循环 (RenderStepped)
--- ==========================================
-RunService.RenderStepped:Connect(function()
-    local myChar = LocalPlayer.Character
-    
-    -- 本地角色未加载或死亡时，停止运算，节省性能
-    if not IsAlive(myChar) then 
-        return 
+local function UpdateHighlights()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local char = plr.Character
+            if char then
+                local hum = char:FindFirstChild("Humanoid")
+                if hum and hum.Health > 0 then
+                    local hl = char:FindFirstChild("JobHighlight")
+                    if not hl then
+                        hl = Instance.new("Highlight")
+                        hl.Name = "JobHighlight"
+                        hl.Parent = char
+                        hl.FillTransparency = 0.6
+                        hl.OutlineTransparency = 0
+                        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    end
+                    local job = GetJob(plr)
+                    if job == "杀手" then
+                        hl.FillColor = Color3.new(1, 0, 0)
+                        hl.OutlineColor = Color3.new(1, 0, 0)
+                    elseif job == "警长" then
+                        hl.FillColor = Color3.new(0, 0.5, 1)
+                        hl.OutlineColor = Color3.new(0, 0.5, 1)
+                    else
+                        hl.FillColor = Color3.new(1, 1, 1)
+                        hl.OutlineColor = Color3.new(1, 1, 1)
+                    end
+                end
+            end
+        end
     end
+end
 
-    -- 顺序执行各功能引擎
-    ProcessPhysics(myChar)    -- 物理（刀距、穿墙）
-    ProcessVisuals()          -- 视觉（骨骼、透视、目标锁定）
-    ProcessLighting()         -- 环境（防黑屏）
+local function enableJobESP()
+    jobEspEnabled = true
+    if jobEspLoop then task.cancel(jobEspLoop) end
+    jobEspLoop = task.spawn(function()
+        while jobEspEnabled do
+            pcall(function()
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr.Character and plr.Character:FindFirstChild("Head") then
+                        local head = plr.Character.Head
+                        local label = head:FindFirstChild("JobLabel")
+                        if not label then
+                            label = Instance.new("BillboardGui")
+                            label.Name = "JobLabel"
+                            label.Parent = head
+                            label.Size = UDim2.new(0, 100, 0, 30)
+                            label.StudsOffset = Vector3.new(0, 2.5, 0)
+                            label.AlwaysOnTop = true
+                            local txt = Instance.new("TextLabel")
+                            txt.Parent = label
+                            txt.BackgroundTransparency = 1
+                            txt.Size = UDim2.new(1, 0, 1, 0)
+                            txt.TextSize = 15
+                            txt.Font = Enum.Font.ArialBold
+                            label.TextLabel = txt
+                        end
+                        local txt = label.TextLabel
+                        local job = GetJob(plr)
+                        txt.Text = job
+                        if job == "杀手" then
+                            txt.TextColor3 = Color3.new(1, 0, 0)
+                        elseif job == "警长" then
+                            txt.TextColor3 = Color3.new(0, 0.5, 1)
+                        else
+                            txt.TextColor3 = Color3.new(1, 1, 1)
+                        end
+                    end
+                end
+                UpdateHighlights()
+            end)
+            task.wait(0.3)
+        end
+    end)
+end
+
+local function disableJobESP()
+    jobEspEnabled = false
+    if jobEspLoop then task.cancel(jobEspLoop) end
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Character and plr.Character:FindFirstChild("Head") then
+            local label = plr.Character.Head:FindFirstChild("JobLabel")
+            if label then label:Destroy() end
+        end
+    end
+    ClearHighlights()
+end
+
+local function enableAutoPickGun()
+    autoPickGunEnabled = true
+    autoPickGunLoop = task.spawn(function()
+        while autoPickGunEnabled do
+            task.wait(0.3)
+            local myChar = LocalPlayer.Character
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local myHum = myChar and myChar:FindFirstChild("Humanoid")
+            if myChar and myRoot and myHum and myHum.Health > 0 and not GetWeapon(LocalPlayer, "gun") then
+                local target
+                for _, desc in ipairs(Workspace:GetDescendants()) do
+                    if desc:IsA("Tool") then
+                        local nl = desc.Name:lower()
+                        local isGun = false
+                        for _, kw in ipairs({"gun", "手枪", "警长", "revolver"}) do
+                            if nl:find(kw) then isGun = true break end
+                        end
+                        if isGun and desc:IsDescendantOf(Workspace) and not desc:IsDescendantOf(LocalPlayer) then
+                            target = desc
+                            break
+                        end
+                    end
+                end
+                if target then
+                    local orig = myRoot.CFrame
+                    local pos = target:IsA("BasePart") and target.Position or (target:FindFirstChild("Handle") and target.Handle.Position) or nil
+                    if pos then
+                        myRoot.CFrame = CFrame.new(pos + Vector3.new(0, 2, 0))
+                        task.wait(0.3)
+                        pcall(function() target.Parent = LocalPlayer.Backpack end)
+                        myRoot.CFrame = orig
+                        Notify("已拾取一把警长枪械")
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function disableAutoPickGun()
+    autoPickGunEnabled = false
+    if autoPickGunLoop then task.cancel(autoPickGunLoop) end
+            endlocal function KillerAutoKillAll()
+    if GetJob(LocalPlayer) ~= "杀手" then Notify("仅杀手可使用此功能") return end
+    if autoKillLoop then
+        task.cancel(autoKillLoop)
+        autoKillLoop = nil
+        Notify("自动清场已停止")
+        return
+    end
+    local targets = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            if GetJob(p) == "警长" then
+                table.insert(targets, 1, p)
+            else
+                table.insert(targets, p)
+            end
+        end
+    end
+    if #targets == 0 then Notify("未找到存活目标") return end
+    local knife = GetWeapon(LocalPlayer, "knife")
+    if not knife then Notify("未找到你的刀，无法执行") return end
+    Notify("开始清场，共" .. #targets .. "个目标")
+    autoKillLoop = task.spawn(function()
+        local kills = 0
+        for _, target in ipairs(targets) do
+            local myChar = LocalPlayer.Character
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            local myHum = myChar and myChar:FindFirstChild("Humanoid")
+            local curKnife = GetWeapon(LocalPlayer, "knife")
+            if not myChar or not myRoot or not myHum or myHum.Health <= 0 or not curKnife then
+                autoKillLoop = nil
+                Notify("你已死亡或武器丢失，清场停止")
+                return
+            end
+            if not target or not target:IsDescendantOf(Players) or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") or not target.Character:FindFirstChild("Humanoid") or target.Character.Humanoid.Health <= 0 then
+                Notify("目标" .. target.Name .. "已死亡")
+            else
+                local tRoot = target.Character.HumanoidRootPart
+                myRoot.CFrame = tRoot.CFrame * CFrame.new(0, 0, 2)
+                task.wait(0.1)
+                curKnife:Equip()
+                task.wait(0.05)
+                curKnife:Activate()
+                local start = os.clock()
+                local died = false
+                while os.clock() - start < 5 do
+                    task.wait(0.1)
+                    local tHum = target.Character and target.Character:FindFirstChild("Humanoid")
+                    if not tHum or tHum.Health <= 0 then died = true break end
+                    local mHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+                    if not mHum or mHum.Health <= 0 then
+                        autoKillLoop = nil
+                        Notify("你已死亡，清场停止")
+                        return
+                    end
+                    local nKnife = GetWeapon(LocalPlayer, "knife")
+                    if not nKnife then
+                        autoKillLoop = nil
+                        Notify("武器丢失，清场停止")
+                        return
+                    end
+                    local ntRoot = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+                    local nmRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if ntRoot and nmRoot then
+                        nmRoot.CFrame = ntRoot.CFrame * CFrame.new(0, 0, 2)
+                        nKnife:Equip()
+                        task.wait(0.05)
+                        nKnife:Activate()
+                    end
+                end
+                if died then
+                    kills = kills + 1
+                    Notify("已击杀 " .. target.Name .. " (" .. kills .. "/" .. #targets .. ")")
+                else
+                    Notify("超时，跳过 " .. target.Name)
+                end
+            end
+        end
+        autoKillLoop = nil
+        Notify("清场完成，共击杀" .. kills .. "个目标")
+    end)
+end
+
+local function KillAllV2()
+    if GetJob(LocalPlayer) ~= "杀手" then Notify("仅杀手可使用此功能") return end
+    if not LocalPlayer.Character:FindFirstChild("Knife") then
+        if LocalPlayer.Backpack:FindFirstChild("Knife") then
+            LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack.Knife)
+        else
+            Notify("你没有刀")
+            return
+        end
+    end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.Anchored = true
+            p.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 1
+        end
+    end
+    LocalPlayer.Character.Knife.Stab:FireServer("Slash")
+    Notify("已尝试杀死所有人")
+end
+
+local function HostageAll()
+    if GetJob(LocalPlayer) ~= "杀手" then Notify("仅杀手可使用此功能") return end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.Anchored = true
+            p.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 5
+        end
+    end
+    Notify("已把所有人扣为人质")
+end
+
+local function enableKillAura()
+    TaffyAu = true
+    if killAuraLoop then killAuraLoop:Disconnect() end
+    killAuraLoop = RunService.Heartbeat:Connect(function()
+        if GetJob(LocalPlayer) ~= "杀手" then return end
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local tr = p.Character.HumanoidRootPart
+                local mr = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if mr and (tr.Position - mr.Position).Magnitude < 7 then
+                    tr.Anchored = true
+                    tr.CFrame = mr.CFrame + mr.CFrame.LookVector * 2
+                    task.wait(0.1)
+                    local knife = LocalPlayer.Character:FindFirstChild("Knife")
+                    if knife then
+                        knife.Stab:FireServer("Slash")
+                    elseif LocalPlayer.Backpack:FindFirstChild("Knife") then
+                        LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack.Knife)
+                        task.wait(0.2)
+                        LocalPlayer.Character.Knife.Stab:FireServer("Slash")
+                    end
+                    return
+                end
+            end
+        end
+    end)
+end
+
+local function disableKillAura()
+    TaffyAu = false
+    if killAuraLoop then killAuraLoop:Disconnect() end
+end
+
+local function throwKillNearest()
+    if GetJob(LocalPlayer) ~= "杀手" then Notify("你不是杀手") return end
+    local nearest = findNearestPlayer()
+    if not nearest or not nearest.Character then Notify("找不到玩家") return end
+    local lpknife = LocalPlayer.Character:FindFirstChild("Knife") or LocalPlayer.Backpack:FindFirstChild("Knife")
+    if not lpknife then Notify("你没有刀") return end
+    if LocalPlayer.Backpack:FindFirstChild("Knife") then
+        LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack.Knife)
+        task.wait(0.1)
+    end
+    LocalPlayer.Character.Knife.Throw:FireServer(lpknife:GetPivot(), nearest.Character.HumanoidRootPart.Position)
+    Notify("飞刀已掷向最近玩家")
+end
+
+local function GodMode()
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then Notify("找不到角色") return end
+    local nHum = hum:Clone()
+    nHum.Parent = char
+    LocalPlayer.Character = nil
+    nHum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+    nHum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    nHum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    nHum.BreakJointsOnDeath = false
+    hum:Destroy()
+    LocalPlayer.Character = char
+    Camera.CameraSubject = nHum
+    nHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+    local anim = char:FindFirstChild("Animate")
+    if anim then anim.Disabled = true task.wait(0.1) anim.Disabled = false end
+    nHum.Health = nHum.MaxHealth
+    Notify("上帝模式已开启")
+end
+
+local function enableRange()
+    rangeEnabled = true
+    task.spawn(function()
+        while rangeEnabled do
+            for _, v in ipairs(Players:GetPlayers()) do
+                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    local sz = Vector3.new(rangeSize, rangeSize, rangeSize)
+                    if rangeBox then
+                        for _, part in ipairs(v.Character:GetChildren()) do
+                            if part:IsA("BasePart") then part.Size = sz part.Transparency = 0.2 end
+                        end
+                    else
+                        local root = v.Character.HumanoidRootPart
+                        root.Size = sz
+                        root.Transparency = 0.2
+                        root.CanCollide = false
+                    end
+                end
+            end
+            task.wait(0.2)
+        end
+    end)
+end
+
+local function disableRange()
+    rangeEnabled = false
+end
+
+local function teleportToGunDrop()
+    local map = getMap()
+    if not map or not map:FindFirstChild("GunDrop") then Notify("没有掉落枪支") return end
+    local gun = map.GunDrop
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local prev = LocalPlayer.Character.HumanoidRootPart.CFrame
+        LocalPlayer.Character.HumanoidRootPart.CFrame = gun:GetPivot()
+        local conn
+        conn = LocalPlayer.Backpack.ChildAdded:Connect(function(child)
+            if child.Name == "Gun" then
+                conn:Disconnect()
+                task.wait(0.5)
+                LocalPlayer.Character.HumanoidRootPart.CFrame = prev
+            end
+        end)
+        task.delay(5, function()
+            if conn then conn:Disconnect() LocalPlayer.Character.HumanoidRootPart.CFrame = prev end
+        end)
+    end
+                endlocal function loadFlightScript()
+    local ok, err = pcall(function()
+        local main = Instance.new("ScreenGui")
+        main.Name = "main"; main.Parent = LocalPlayer:WaitForChild("PlayerGui")
+        main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling; main.ResetOnSpawn = false
+        local Frame = Instance.new("Frame")
+        Frame.Parent = main; Frame.BackgroundColor3 = Color3.fromRGB(163,255,137)
+        Frame.BorderColor3 = Color3.fromRGB(103,221,213); Frame.Position = UDim2.new(0.1,0,0.38,0); Frame.Size = UDim2.new(0,190,0,57)
+        local up = Instance.new("TextButton")
+        up.Parent=Frame; up.BackgroundColor3=Color3.fromRGB(79,255,152); up.Size=UDim2.new(0,44,0,28)
+        up.Font=Enum.Font.SourceSans; up.Text="上升"; up.TextColor3=Color3.new(0,0,0); up.TextSize=14
+        local down = Instance.new("TextButton")
+        down.Parent=Frame; down.BackgroundColor3=Color3.fromRGB(215,255,121); down.Position=UDim2.new(0,0,0.49,0)
+        down.Size=UDim2.new(0,44,0,28); down.Font=Enum.Font.SourceSans; down.Text="下落"; down.TextColor3=Color3.new(0,0,0); down.TextSize=14
+        local onof = Instance.new("TextButton")
+        onof.Parent=Frame; onof.BackgroundColor3=Color3.fromRGB(255,249,74); onof.Position=UDim2.new(0.7,0,0.49,0)
+        onof.Size=UDim2.new(0,56,0,28); onof.Font=Enum.Font.SourceSans; onof.Text="飞"; onof.TextColor3=Color3.new(0,0,0); onof.TextSize=14
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.Parent=Frame; TextLabel.BackgroundColor3=Color3.fromRGB(242,60,255); TextLabel.Position=UDim2.new(0.47,0,0,0)
+        TextLabel.Size=UDim2.new(0,100,0,28); TextLabel.Font=Enum.Font.SourceSans; TextLabel.Text="灵境"
+        TextLabel.TextColor3=Color3.new(0,0,0); TextLabel.TextScaled=true; TextLabel.TextSize=14; TextLabel.TextWrapped=true
+        local plus = Instance.new("TextButton")
+        plus.Parent=Frame; plus.BackgroundColor3=Color3.fromRGB(133,145,255); plus.Position=UDim2.new(0.23,0,0,0)
+        plus.Size=UDim2.new(0,45,0,28); plus.Font=Enum.Font.SourceSans; plus.Text="+"
+        plus.TextColor3=Color3.new(0,0,0); plus.TextScaled=true; plus.TextSize=14; plus.TextWrapped=true
+        local speed = Instance.new("TextLabel")
+        speed.Parent=Frame; speed.BackgroundColor3=Color3.fromRGB(255,85,0); speed.Position=UDim2.new(0.47,0,0.49,0)
+        speed.Size=UDim2.new(0,44,0,28); speed.Font=Enum.Font.SourceSans; speed.Text="1"
+        speed.TextColor3=Color3.new(0,0,0); speed.TextScaled=true; speed.TextSize=14; speed.TextWrapped=true
+        local mine = Instance.new("TextButton")
+        mine.Parent=Frame; mine.BackgroundColor3=Color3.fromRGB(123,255,247); mine.Position=UDim2.new(0.23,0,0.49,0)
+        mine.Size=UDim2.new(0,45,0,29); mine.Font=Enum.Font.SourceSans; mine.Text="-"
+        mine.TextColor3=Color3.new(0,0,0); mine.TextScaled=true; mine.TextSize=14; mine.TextWrapped=true
+        local closebutton = Instance.new("TextButton")
+        closebutton.Parent=Frame; closebutton.BackgroundColor3=Color3.fromRGB(225,25,0); closebutton.Font=Enum.Font.SourceSans
+        closebutton.Size=UDim2.new(0,45,0,28); closebutton.Text="X"; closebutton.TextSize=30; closebutton.Position=UDim2.new(0,0,-1,27)
+        local mini = Instance.new("TextButton")
+        mini.Parent=Frame; mini.BackgroundColor3=Color3.fromRGB(192,150,230); mini.Font=Enum.Font.SourceSans
+        mini.Size=UDim2.new(0,45,0,28); mini.Text="-"; mini.TextSize=40; mini.Position=UDim2.new(0,44,-1,27)
+        local mini2 = Instance.new("TextButton")
+        mini2.Parent=Frame; mini2.BackgroundColor3=Color3.fromRGB(192,150,230); mini2.Font=Enum.Font.SourceSans
+        mini2.Size=UDim2.new(0,45,0,28); mini2.Text="+"; mini2.TextSize=40; mini2.Position=UDim2.new(0,44,0,30); mini2.Visible=false
+        Frame.Active=true; Frame.Draggable=true
+        local flySpeeds, flyingNow = 1, false
+        local chr = LocalPlayer.Character
+        local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
+        closebutton.MouseButton1Click:Connect(function() main:Destroy() end)
+        up.MouseButton1Click:Connect(function() if chr and chr:FindFirstChild("HumanoidRootPart") then chr.HumanoidRootPart.CFrame = chr.HumanoidRootPart.CFrame + Vector3.new(0,3,0) end end)
+        down.MouseButton1Click:Connect(function() if chr and chr:FindFirstChild("HumanoidRootPart") then chr.HumanoidRootPart.CFrame = chr.HumanoidRootPart.CFrame + Vector3.new(0,-3,0) end end)
+        mini.MouseButton1Click:Connect(function()
+            up.Visible=false; down.Visible=false; onof.Visible=false; plus.Visible=false; speed.Visible=false; mine.Visible=false; closebutton.Visible=false; mini.Visible=false; mini2.Visible=true
+            Frame.Size=UDim2.new(0,100,0,28); TextLabel.Position=UDim2.new(0,0,0,0)
+        end)
+        mini2.MouseButton1Click:Connect(function()
+            up.Visible=true; down.Visible=true; onof.Visible=true; plus.Visible=true; speed.Visible=true; mine.Visible=true; closebutton.Visible=true; mini.Visible=true; mini2.Visible=false
+            Frame.Size=UDim2.new(0,190,0,57); TextLabel.Position=UDim2.new(0.47,0,0,0)
+        end)
+        plus.MouseButton1Click:Connect(function() flySpeeds=flySpeeds+1; speed.Text=tostring(flySpeeds) end)
+        mine.MouseButton1Click:Connect(function()
+            if flySpeeds>1 then flySpeeds=flySpeeds-1; speed.Text=tostring(flySpeeds) else speed.Text="错误"; task.wait(0.2); speed.Text="1" end
+        end)
+        LocalPlayer.CharacterAdded:Connect(function(newChar) chr=newChar; hum=chr:FindFirstChildOfClass("Humanoid") end)
+        onof.MouseButton1Click:Connect(function()
+            flyingNow = not flyingNow; onof.Text = flyingNow and "停" or "飞"
+            if flyingNow then
+                if hum then for _,st in pairs(Enum.HumanoidStateType:GetEnumItems()) do hum:SetStateEnabled(st,false) end hum:ChangeState(Enum.HumanoidStateType.Swimming) end
+                if chr.Animate then chr.Animate.Disabled=true end
+                if hum then for _,tr in next, hum:GetPlayingAnimationTracks() do tr:AdjustSpeed(0) end end
+                task.spawn(function() while flyingNow and chr and hum do RunService.Heartbeat:Wait() if hum.MoveDirection.Magnitude>0 then chr:TranslateBy(hum.MoveDirection*flySpeeds) end end end)
+                if hum.RigType == Enum.HumanoidRigType.R6 then
+                    local torso=chr.Torso
+                    local bg=Instance.new("BodyGyro",torso); bg.P=9e4; bg.MaxTorque=Vector3.new(9e9,9e9,9e9); bg.CFrame=torso.CFrame
+                    local bv=Instance.new("BodyVelocity",torso); bv.Velocity=Vector3.new(); bv.MaxForce=Vector3.new(9e9,9e9,9e9)
+                    if flyingNow then chr.Humanoid.PlatformStand=true end
+                    while flyingNow and chr.Humanoid.Health>0 do RunService.RenderStepped:Wait(); bg.CFrame=Workspace.CurrentCamera.CoordinateFrame end
+                    bg:Destroy(); bv:Destroy(); chr.Humanoid.PlatformStand=false; chr.Animate.Disabled=false
+                else
+                    local upper=chr.UpperTorso
+                    local bg=Instance.new("BodyGyro",upper); bg.P=9e4; bg.MaxTorque=Vector3.new(9e9,9e9,9e9); bg.CFrame=upper.CFrame
+                    local bv=Instance.new("BodyVelocity",upper); bv.Velocity=Vector3.new(); bv.MaxForce=Vector3.new(9e9,9e9,9e9)
+                    if flyingNow then chr.Humanoid.PlatformStand=true end
+                    while flyingNow and chr.Humanoid.Health>0 do wait(); bg.CFrame=Workspace.CurrentCamera.CoordinateFrame end
+                    bg:Destroy(); bv:Destroy(); chr.Humanoid.PlatformStand=false; chr.Animate.Disabled=false
+                end
+            else
+                if hum then for _,st in pairs(Enum.HumanoidStateType:GetEnumItems()) do hum:SetStateEnabled(st,true) end hum:ChangeState(Enum.HumanoidStateType.Running) end
+                if chr.Animate then chr.Animate.Disabled=false end
+            end
+        end)
+    end)
+    if ok then Notify("飞行脚本已加载") else Notify("飞行脚本加载失败: "..tostring(err)) end
+                    endlocal function TP(p)
+    local r = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local tr = p.Character:FindFirstChild("HumanoidRootPart")
+    if r and tr then r.CFrame = tr.CFrame*CFrame.new(0,0,2) Notify("已传送到 "..p.Name) end
+end
+
+local function TPC()
+    local l = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not l then return end
+    local minDist, t = math.huge, nil
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and GetJob(p)=="平民" and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local d = (p.Character.HumanoidRootPart.Position - l.Position).Magnitude
+            if d<minDist then minDist=d; t=p end
+        end
+    end
+    if t then TP(t) else Notify("未找到平民") end
+end
+
+local function TPS()
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and GetJob(p)=="警长" and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then TP(p) return end
+    end
+    Notify("未找到警长")
+end
+
+local function TPK()
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and GetJob(p)=="杀手" and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then TP(p) return end
+    end
+    Notify("未找到杀手")
+end
+
+local function FollowTargetByJob(job)
+    if currentFollowLoop then currentFollowLoop:Disconnect() end
+    local target
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health>0 then
+            if GetJob(p)==job then target=p break end
+        end
+    end
+    if not target then Notify("未找到存活的"..job.."目标") return end
+    Notify("跟随已开启，锁定 "..target.Name)
+    currentFollowLoop = RunService.Heartbeat:Connect(function()
+        if not target or not target:IsDescendantOf(Players) or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") or not target.Character:FindFirstChild("Humanoid") or target.Character.Humanoid.Health<=0 or not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            currentFollowLoop:Disconnect() Notify("跟随已停止") return
+        end
+        LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,2)
+    end)
+end
+
+local function ForceStopFollow()
+    if currentFollowLoop then currentFollowLoop:Disconnect() Notify("跟随已强制取消") else Notify("当前没有跟随目标") end
+end
+
+local function CreateCrosshair()
+    if crosshairUI then return end
+    crosshairUI = Instance.new("ScreenGui") crosshairUI.Name="CrosshairUI" crosshairUI.Parent=PlayerGui crosshairUI.IgnoreGuiInset=true
+    local dot = Instance.new("Frame") dot.Parent=crosshairUI dot.Size=UDim2.new(0,4,0,4) dot.Position=UDim2.new(0.5,-2,0.5,-2) dot.BackgroundColor3=Color3.new(1,1,1) dot.BorderSizePixel=0
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1,0)
+    local outer = Instance.new("Frame") outer.Parent=crosshairUI outer.Size=UDim2.new(0,20,0,20) outer.Position=UDim2.new(0.5,-10,0.5,-10) outer.BackgroundTransparency=1 outer.BorderSizePixel=0
+    for i=1,4 do
+        local line = Instance.new("Frame") line.Parent=outer line.BackgroundColor3=Color3.new(1,1,1) line.BorderSizePixel=0
+        if i<=2 then line.Size=UDim2.new(0,8,0,2) line.Position=i==1 and UDim2.new(0,-8,0.5,-1) or UDim2.new(1,0,0.5,-1)
+        else line.Size=UDim2.new(0,2,0,8) line.Position=i==3 and UDim2.new(0.5,-1,0,-8) or UDim2.new(0.5,-1,1,0) end
+    end
+end
+
+local function RemoveCrosshair()
+    if crosshairUI then crosshairUI:Destroy() crosshairUI=nil end
+end
+
+local function StartTracking(job)
+    if trackLoop then trackLoop:Disconnect() end
+    RemoveCrosshair()
+    local target
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health>0 then
+            if GetJob(p)==job then target=p break end
+        end
+    end
+    if not target then Notify("未找到存活的"..job) return end
+    Notify("自瞄已锁定 "..target.Name)
+    CreateCrosshair()
+    trackLoop = RunService.RenderStepped:Connect(function()
+        if not target or not target:IsDescendantOf(Players) or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+            trackLoop:Disconnect() RemoveCrosshair() Notify("自瞄已停止") return
+        end
+        local myChar = LocalPlayer.Character
+        if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+        local tRoot = target.Character.HumanoidRootPart
+        Camera.CameraSubject = tRoot
+        Camera.CameraType = Enum.CameraType.Scriptable
+        Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, tRoot.Position)
+    end)
+end
+
+local function StopTracking()
+    if trackLoop then trackLoop:Disconnect() end
+    RemoveCrosshair()
+    Camera.CameraSubject = LocalPlayer.Character
+    Camera.CameraType = Enum.CameraType.Custom
+    Notify("自瞄已停止")
+                        endWindow = Library:CreateWindow({
+    Title = "灵境",
+    Footer = "创作者：李佳 | QQ群：2066484928",
+    Icon = 131153193945220,
+    NotifySide = "Right",
+    ShowCustomCursor = true
+})
+Notify = function(msg) Library:Notify(msg, 3) end
+
+local Tabs = {
+    Notice = Window:AddTab("通知", "info"),
+    Main = Window:AddTab("主要", "zap"),
+    Teleport = Window:AddTab("传送与跟随", "map"),
+    Settings = Window:AddTab("设置", "settings")
+}
+
+local NoticeGroup = Tabs.Notice:AddLeftGroupbox("作者消息")
+NoticeGroup:AddLabel('灵境 · 持续更新')
+NoticeGroup:AddLabel('创作者：李佳')
+NoticeGroup:AddLabel('QQ群：2066484928')
+
+local selectedTexture = "灵境"
+local function ApplyWindowIcon()
+    local id = (selectedTexture == "灵境" and "rbxassetid://113517588654522") or (selectedTexture == "巨魔" and "rbxassetid://131153193945220") or nil
+    for _, gui in ipairs(PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") then
+            for _, obj in ipairs(gui:GetDescendants()) do
+                if obj:IsA("ImageLabel") and obj.Image == "rbxassetid://113517588654522" then
+                    if selectedTexture == "删除" then
+                        obj.Image = ""
+                        obj.ImageTransparency = 1
+                    else
+                        obj.Image = id
+                        obj.ImageTransparency = 0
+                    end
+                    Notify("窗口图标已更新")
+                    return
+                end
+            end
+        end
+    end
+    Notify("未找到图标元素")
+end
+
+local SettingsLeft = Tabs.Settings:AddLeftGroupbox("选图案")
+SettingsLeft:AddDropdown('WindowIconSelector', {
+    Values = {"灵境图案", "巨魔图案", "删除图案"},
+    Default = 1,
+    Text = '窗口图标',
+    Callback = function(Value)
+        local map = { ["灵境图案"] = "灵境", ["巨魔图案"] = "巨魔", ["删除图案"] = "删除" }
+        selectedTexture = map[Value] or Value
+    end
+})
+SettingsLeft:AddButton({ Text = '应用图标', Func = ApplyWindowIcon, DoubleClick = false })
+SettingsLeft:AddButton({ Text = '卸载脚本', Func = function() Library:Unload() end })
+
+local MainLeft = Tabs.Main:AddLeftGroupbox("功能开关")
+local MainRight = Tabs.Main:AddRightGroupbox("快捷操作")
+
+MainLeft:AddToggle('JobESP', { Text = '职业透视', Default = false, Callback = function(v) if v then enableJobESP() else disableJobESP() end end })
+MainLeft:AddToggle('CoinV1', { Text = '自动捡金币 v1', Default = false, Callback = function(v) autoCollectGoldEnabled = v if v then enableCoinV1() else disableCoinV1() end end })
+MainLeft:AddToggle('CoinV2', { Text = '自动捡金币 v2', Default = false, Callback = function(v) if v then enableCoinV2() else disableCoinV2() end end })
+MainLeft:AddToggle('AutoPickGun', { Text = '自动捡警长枪', Default = false, Callback = function(v) if v then enableAutoPickGun() else disableAutoPickGun() end end })
+MainLeft:AddToggle('IgnoreKnife', { Text = '忽略飞刀', Default = false, Callback = function(v) ignoreKnife = v end })
+MainLeft:AddToggle('GunESP', {
+    Text = '高亮地上枪支',
+    Default = false,
+    Callback = function(v)
+        gunESP = v
+        if v then
+            for _, d in ipairs(Workspace:GetDescendants()) do
+                if d.Name == "GunDrop" then
+                    if not Workspace:FindFirstChild("GunESP") then
+                        local hl = gunHighlight:Clone()
+                        hl.Parent = Workspace
+                        hl.Adornee = d
+                        hl.Enabled = true
+                    else
+                        Workspace:FindFirstChild("GunESP").Adornee = d
+                    end
+                end
+            end
+        else
+            local e = Workspace:FindFirstChild("GunESP")
+            if e then e:Destroy() end
+        end
+    end
+})
+MainLeft:AddToggle('TrapESP', {
+    Text = '高亮杀手陷阱',
+    Default = false,
+    Callback = function(v)
+        trapESP = v
+        if v then
+            for _, d in ipairs(Workspace:GetDescendants()) do
+                if d.Name == "Trap" and d.Parent:IsDescendantOf(Workspace) then
+                    d.Transparency = 0
+                    local e = trapHighlight:Clone()
+                    e.Parent = Workspace
+                    e.Adornee = d
+                end
+            end
+        else
+            for _, c in ipairs(Workspace:GetChildren()) do
+                if c.Name == "TrapESP" then c:Destroy() end
+            end
+        end
+    end
+})
+MainLeft:AddToggle('Antifail', { Text = '防失败', Default = false, Callback = function(v) antifail = v end })
+MainLeft:AddToggle('Range', { Text = '范围修改', Default = false, Callback = function(v) if v then enableRange() else disableRange() end end })
+MainLeft:AddToggle('RangeBox', { Text = '范围所有部位', Default = false, Callback = function(v) rangeBox = v end })
+MainLeft:AddSlider({ Title = "范围尺寸", Step = 1, Value = {Min = 1, Max = 10, Default = 1}, Callback = function(v) rangeSize = v end })
+
+MainRight:AddButton({ Text = '飞行脚本', Func = loadFlightScript })
+MainRight:AddButton({ Text = '上帝模式', Func = GodMode })
+MainRight:AddButton({ Text = '甩飞杀手', Func = function()
+    local m = findMurderer()
+    if not m then Notify("找不到杀手")
+    elseif m == LocalPlayer then Notify("不能甩飞自己")
+    else powerfulFling(m) end
+end })
+MainRight:AddButton({ Text = '甩飞警长', Func = function()
+    local s = findSheriff()
+    if not s then Notify("找不到警长")
+    elseif s == LocalPlayer then Notify("不能甩飞自己")
+    else powerfulFling(s) end
+end })
+MainRight:AddButton({ Text = '杀戮光环', Func = function()
+    if TaffyAu then disableKillAura() Notify("杀戮光环已关闭")
+    else enableKillAura() Notify("杀戮光环已开启") end
+end })
+MainRight:AddButton({ Text = '杀死所有人 v2', Func = KillAllV2 })
+MainRight:AddButton({ Text = '扣为人质', Func = HostageAll })
+MainRight:AddButton({ Text = '飞刀击杀最近玩家', Func = throwKillNearest })
+MainRight:AddButton({ Text = '自动清场 (v1)', Func = KillerAutoKillAll })
+MainRight:AddButton({ Text = '发送身份到聊天', Func = function()
+    local channels = game:GetService("TextChatService"):WaitForChild("TextChannels"):GetChildren()
+    for _, ch in ipairs(channels) do
+        if ch.Name ~= "RBXSystem" then
+            local murd = findMurderer() local sher = findSheriff()
+            local mn = murd and murd.Name or "[未检测到]" local sn = sher and sher.Name or "[未检测到]"
+            ch:SendAsync("警长:"..sn.." | 杀手:"..mn)
+        end
+    end
+    Notify("已发送")
+end })
+MainRight:AddButton({ Text = '传送到掉落的枪', Func = teleportToGunDrop })
+
+local TeleLeft = Tabs.Teleport:AddLeftGroupbox("瞬间传送")
+local TeleRight = Tabs.Teleport:AddRightGroupbox("视角与跟随")
+
+TeleLeft:AddButton({ Text = '传送到最近平民', Func = TPC })
+TeleLeft:AddButton({ Text = '传送到警长', Func = TPS })
+TeleLeft:AddButton({ Text = '传送到杀手', Func = TPK })
+TeleLeft:AddLabel('跟随目标（持续传送身后）')
+TeleLeft:AddButton({ Text = '跟随平民', Func = function() FollowTargetByJob("平民") end })
+TeleLeft:AddButton({ Text = '跟随警长', Func = function() FollowTargetByJob("警长") end })
+TeleLeft:AddButton({ Text = '跟随杀手', Func = function() FollowTargetByJob("杀手") end })
+
+TeleRight:AddButton({ Text = '自瞄（锁定杀手视角）', Func = function() if trackLoop then StopTracking() else StartTracking("杀手") end end })
+TeleRight:AddButton({ Text = '自瞄（锁定警长视角）', Func = function() if trackLoop then StopTracking() else StartTracking("警长") end end })
+TeleRight:AddButton({ Text = '强制取消跟随', Func = ForceStopFollow })
+TeleRight:AddButton({ Text = '将杀手传送到出生点', Func = function()
+    local found = false
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and GetJob(p)=="杀手" then
+            local char = p.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char.HumanoidRootPart.CFrame = CFrame.new(352.42,522.05,-8.30)
+                found=true
+                Notify("已将杀手 "..p.Name.." 传送到出生点")
+            end
+        end
+    end
+    if not found then Notify("未找到存活的杀手") end
+end })
+
+Workspace.DescendantAdded:Connect(function(ch)
+    if gunESP and ch.Name=="GunDrop" then
+        if not Workspace:FindFirstChild("GunESP") then
+            local hl = gunHighlight:Clone()
+            hl.Parent = Workspace
+            hl.Adornee = ch
+            hl.Enabled = true
+        else
+            Workspace:FindFirstChild("GunESP").Adornee = ch
+        end
+    end
+    if trapESP and ch.Name=="Trap" and ch.Parent:IsDescendantOf(Workspace) then
+        ch.Transparency = 0
+        local e = trapHighlight:Clone()
+        e.Parent = Workspace
+        e.Adornee = ch
+    end
 end)
+
+Workspace.DescendantRemoving:Connect(function(ch)
+    if gunESP and ch.Name=="GunDrop" and Workspace:FindFirstChild("GunESP") then
+        Workspace:FindFirstChild("GunESP"):Destroy()
+    end
+end)
+
+game.Workspace.ChildAdded:Connect(function(chi)
+    if chi.Name=="ThrowingKnife" and ignoreKnife then chi:Destroy() end
+end)
+
+task.spawn(function()
+    if RunService:IsStudio() then return end
+    pcall(function()
+        local OldNameCall
+        OldNameCall = hookmetamethod(game, "__namecall", function(Self, ...)
+            local Args = {...}
+            if antifail and getnamecallmethod() == "FireServer" and Args[1] == "SetPlayerMinigameResult" then
+                Args[2] = true
+            end
+            return OldNameCall(Self, unpack(Args))
+        end)
+    end)
+end)
+
+if ThemeManager then
+    ThemeManager:SetLibrary(Library)
+    ThemeManager:SetFolder("灵境")
+    ThemeManager:ApplyToTab(Tabs.Settings)
+end
+if SaveManager then
+    SaveManager:SetLibrary(Library)
+    SaveManager:IgnoreThemeSettings()
+    SaveManager:SetFolder("灵境")
+    SaveManager:BuildConfigSection(Tabs.Settings)
+                            end
